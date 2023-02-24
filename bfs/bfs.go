@@ -13,14 +13,14 @@ import (
 
 type BreathFirstSearch struct {
 	queue               queue.Queue[string]
-	discorveredWebsites []string
+	discorveredWebsites map[string]bool
 }
 
 const urlPattern string = "https://(\\w+\\.)*(\\w+)"
 
 var client *http.Client
 
-func NewBFS(queue queue.Queue[string], discorveredWebsites []string) BreathFirstSearch {
+func NewBFS(queue queue.Queue[string], discorveredWebsites map[string]bool) BreathFirstSearch {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -30,7 +30,7 @@ func NewBFS(queue queue.Queue[string], discorveredWebsites []string) BreathFirst
 
 func (bfs *BreathFirstSearch) Traverse(root string) {
 	bfs.queue.Enqueue(root)
-	bfs.discorveredWebsites = append(bfs.discorveredWebsites, root)
+	bfs.discorveredWebsites[root] = true
 
 	for bfs.queue.IsNotEmpty() {
 		actual := bfs.queue.Dequeue()
@@ -41,22 +41,13 @@ func (bfs *BreathFirstSearch) Traverse(root string) {
 		newUrls := r.FindAllString(rawHTML, 5)
 
 		for _, newUrl := range newUrls {
-			if !bfs.containsWebsite(newUrl) {
-				bfs.discorveredWebsites = append(bfs.discorveredWebsites, newUrl)
-				log.Printf("Website found %s", newUrl)
+			if _, ok := bfs.discorveredWebsites[newUrl]; !ok {
+				bfs.discorveredWebsites[newUrl] = true
+				log.Printf("New website found: %s", newUrl)
 				bfs.queue.Enqueue(newUrl)
 			}
 		}
 	}
-}
-
-func (bfs *BreathFirstSearch) containsWebsite(item string) bool {
-	for _, e := range bfs.discorveredWebsites {
-		if e == item {
-			return true
-		}
-	}
-	return false
 }
 
 func readURL(url string) string {

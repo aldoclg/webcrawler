@@ -10,7 +10,7 @@ import (
 func main() {
 	fmt.Println("Webcrawler world")
 
-	bfs := bfs.NewBFS(queue.NewQueue[string](), make([]string, 0))
+	bfs := bfs.NewBFS(queue.NewQueue[string](), make(map[string]bool, 0))
 
 	bfs.Traverse("https://gobyexample.com/regular-expressions")
 }
